@@ -1,64 +1,63 @@
 <?php
-
-// Define a class representing a double room booking
-class doubleRoomBed
+interface RoomBookingInterface
 {
-    // Properties
-    public int $price = 40;             // Default price for the room
-    public string $description = "Room Booking";  // Default description for the room
-    public bool $hasExtraBed = false;   // Flag indicating whether the room has an extra bed
-    public bool $hasWifi = false;       // Flag indicating whether the room has Wi-Fi
-
-    // Method to add an extra bed to the room
-    public function addExtraBed()
-    {
-        $this->hasExtraBed = true;
-    }
-
-    // Method to add Wi-Fi to the room
-    public function addWifi()
-    {
-        $this->hasWifi = true;
-    }
-
-    // Method to calculate the final price of the room considering extra bed and Wi-Fi
-    public function getPrice()
-    {
-        // If the room has an extra bed, add an extra cost
-        if ($this->hasExtraBed)
-            $this->price += 15;
-
-        // If the room has Wi-Fi, add an extra cost
-        if ($this->hasWifi)
-            $this->price += 2;
-
-        // Return the total price
-        return $this->price;
-    }
-
-    // Method to generate a description for the room considering extra bed and Wi-Fi
-    public function getDescription()
-    {
-        // If the room has an extra bed, add it to the description
-        if ($this->hasExtraBed)
-            $this->description .= ", with extra bed";
-
-        // If the room has Wi-Fi, add it to the description
-        if ($this->hasWifi)
-            $this->description .= ", with Wi-Fi";
-
-        // Return the final description
-        return $this->description;
-    }
+public function getPrice();
+public function getDescription();
 }
 
-// Create an instance of the doubleRoomBed class
-$d = new doubleRoomBed;
+class BasicRoom implements RoomBookingInterface
+{
+public function getPrice()
+{
+return 40;
+}
 
-// Add an extra bed and Wi-Fi to the room
-$d->addExtraBed();
-$d->addWifi();
+public function getDescription()
+{
+return "Room Booking";
+}
+}
 
-// Display the total price and description of the room
-echo "Total Price: $" . $d->getPrice() . PHP_EOL;
-echo "Description: " . $d->getDescription() . PHP_EOL;
+abstract class RoomDecorator implements RoomBookingInterface
+{
+protected $roomBooking;
+
+public function __construct(RoomBookingInterface $roomBooking)
+{
+$this->roomBooking = $roomBooking;
+}
+}
+
+class ExtraBedDecorator extends RoomDecorator
+{
+public function getPrice()
+{
+return $this->roomBooking->getPrice() + 15;
+}
+
+public function getDescription()
+{
+return $this->roomBooking->getDescription() . ", with extra bed";
+}
+}
+
+class WifiDecorator extends RoomDecorator
+{
+public function getPrice()
+{
+return $this->roomBooking->getPrice() + 2;
+}
+
+public function getDescription()
+{
+return $this->roomBooking->getDescription() . ", with Wi-Fi";
+}
+}
+
+// Usage
+$basicRoom = new BasicRoom();
+$roomWithExtraBed = new ExtraBedDecorator($basicRoom);
+$roomWithWifiAndExtraBed = new WifiDecorator($roomWithExtraBed);
+
+echo "Total Price: $" . $roomWithWifiAndExtraBed->getPrice() . PHP_EOL;
+echo "Description: " . $roomWithWifiAndExtraBed->getDescription() . PHP_EOL;
